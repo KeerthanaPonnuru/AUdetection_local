@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Video Streaming</title>
+</head>
+<body>
+    <h1>Dynamic Text:</h1>
+    <p>{{dynamic_text}}</p>
+
+    <h2>Video Stream:</h2>
+    <img src="{{ url_for('video') }}" width="640" height="480">
+</body>
+</html>
