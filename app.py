@@ -39,12 +39,9 @@ def get_prediction(image_data):
     logits= np.array(logits[0]).squeeze()
     logits = 1/(1 + np.exp(-logits))
     predict_time = time.time() - t0
-    val=logits
+    val=[float(value) for value in logits]
     val=[x * 100 for x in val]
-    logits[logits>=0.5] = 1
-    logits[logits<0.5] = 0
-    print("logits",logits)
-    return logits,val
+    return val
 
 
 
@@ -69,36 +66,6 @@ AU_DESCRIPTION = {
                     'AU27' : 'Mouth Stretch',
                     'AU43' : 'Eyes Closed'
                  }
-
-def write_on_frame(frame,outputs):
-    caption=[]  
-    #aus=np.array([])
-    #print("outputs",outputs)
-    aus = labels[np.argwhere(outputs).squeeze()]
-    aus=np.array(aus)
-
-    #if aus.ndim == 0:
-     #   aus = np.array([0], dtype=aus.dtype)
-    #print("aus",aus,type(aus))
-    #print(aus.dtype)
-    window_name = 'Image'
-  
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    
-    fontScale = 1
-    
-    color = (0, 0, 255)
-    
-    thickness = 2
-
-    for i, au in enumerate(aus):
-        print(i,"ok")
-        org = (400, 100+(i+1)*50)
-        au = AU_DESCRIPTION['AU'+str(au)]
-        caption.append(au)
-        frame = cv2.putText(frame, au, org, font, fontScale, color, thickness, cv2.LINE_AA)
-    return frame,caption
-
 
 
 def fun():
@@ -127,17 +94,13 @@ def fun():
             ret, buffer = cv2.imencode('.jpg', frame)
             aligned_img=obj(pil_image, facial_landmarks)
             image = frame_process(frame)
-            outputs,val = get_prediction(image)
-            frame,dynamic_text = write_on_frame(frame,outputs)
+            val = get_prediction(image)
             if not ret:
                 continue
 
             global VAL 
             VAL=val
-            print(VAL)
-            global DYNAMIC_TEXT
-            DYNAMIC_TEXT = dynamic_text
-            #print(DYNAMIC_TEXT,1)
+            
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
  
@@ -145,24 +108,14 @@ def fun():
 
 @app.route('/')
 def index():
-    dynamic_text = DYNAMIC_TEXT
-    return render_template('index.html',dynamic_text=dynamic_text)
+    return render_template('index.html')
 
 @app.route('/video')
 def video():
     return Response(fun(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/captions')
-def cap():
-    global DYNAMIC_TEXT
-    response_data = {
-        'message': 'Data from the global variable',
-        'global_data': DYNAMIC_TEXT
-    }
-    return response_data
-
 @app.route('/percentage')
-def per():
+def percentage():
     global VAL
     response_datas = {
         
