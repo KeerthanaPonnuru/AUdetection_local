@@ -3,6 +3,8 @@ from transformers import SwinForImageClassification
 from torch import nn
 import torch
 from einops import rearrange
+import torch.onnx
+
 
 class SwinModel(LightningModule):
     def __init__(self,aus,
@@ -80,7 +82,11 @@ class SwinModel(LightningModule):
         lr = self.learning_rate
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         return optimizer
-a=[]
+a=['AU1', 'AU2', 'AU4', 'AU6', 'AU7', 'AU9', 'AU10','AU12', 'AU14', 'AU15', 'AU17','AU20', 'AU23', 'AU24', 'AU25','AU26','AU27','AU43']
 dummy_input = torch.randn(1, 3, 224, 224)
-obj = SwinModel(a,'base',1e-4,None,'mean')
-obj.to_onnx("export.onnx", dummy_input, export_params=True)
+path= './bestsofar.ckpt'
+
+model = SwinModel(a,'base',1e-4,path,'mean')
+
+onnx_path = "swin_transformer.onnx"
+torch.onnx.export(model, dummy_input, onnx_path, verbose=True)
