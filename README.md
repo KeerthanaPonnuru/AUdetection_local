@@ -1,6 +1,6 @@
 # AU detection
 
-Fot the video capture OpenCV has been utilized and for the web interface, Flask application has been used. 
+For the video capture OpenCV has been utilized and for the web interface, Flask application has been used. 
 ## Installation
 It is expected that Python (version 3 preferred) is installed.
 
