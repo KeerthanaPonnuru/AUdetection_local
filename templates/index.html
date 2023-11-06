@@ -5,6 +5,7 @@
      <style>
         .bar-name-container{
             display: flex;
+            align-items: center;
             margin: 10px 0;
 
         }
@@ -20,7 +21,7 @@
         .bar {
             display: flex;
             justify-content: space-between;
-            align-items: right;
+            align-items: center;
             width: 40%;
             height: 10px;
             background: linear-gradient(to right, #3498db 0%, #3498db 0%, #ecf0f1 0%, #ecf0f1 0%);
@@ -29,7 +30,8 @@
         }
 
         .name {
-            margin-right: 40px;
+            margin-right: 20px;
+            width: 30%;
         }
 
         .percentage-text {
@@ -71,14 +73,14 @@
     
     <p>{{dynamic_text}}</p>
 
-    <img src="{{ url_for('video') }}" style="min-width:980px;">
+    <img src="{{ url_for('video') }}" style="min-width:980px;margin-top: 170px;">
 
     <span class="bar-container" id="bar-container"></span>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const barContainer = document.getElementById("bar-container");
-        const names = ['AU1-', 'AU2-', 'AU4-', 'AU6-', 'AU7-', 'AU9    -', 'AU10    -', 'AU12    -','AU14    -', 'AU15    -', 'AU17    -', 'AU20    -', 'AU23    -', 'AU24    -', 'AU25    -', 'AU26    -', 'AU27    -','AU43    -'];
+        const names = ['Inner Brow Raiser', 'Outer Brow Raiser', 'Brow Lowerer','Cheek Raiser', 'Lid Tightener', 'Nose Wrinkler', 'Upper Lip Raiser', 'Lip Corner Puller','Dimpler', 'Lip Corner Depressor', 'Chin Raiser', 'Lip Stretcher', 'Lip Tightener', 'Lip Pressor', 'Lips Part', 'Jaw Drop', 'Mouth Stretch','Eyes Closed'];
 
         async function createBars() {
             try {
