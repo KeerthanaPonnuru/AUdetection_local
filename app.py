@@ -8,8 +8,10 @@ from detector import detect_faces
 from align import FaceAlign
 import threading
 from flask_cors import CORS
-import tkinter as tk
-
+import mediapipe as mp
+mp_face_mesh = mp.solutions.face_mesh
+face_mesh = mp_face_mesh.FaceMesh()
+factor=1.5
 app = Flask(__name__)
 CORS(app) 
 session = onnxruntime.InferenceSession("swin_transformer.onnx")
@@ -69,6 +71,7 @@ AU_DESCRIPTION = {
 
 
 def fun():
+    face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.5)
     cap = cv2.VideoCapture(-0)
     obj=FaceAlign(244,2.9)
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  
@@ -77,32 +80,55 @@ def fun():
     thresholds=[0.6, 0.7, 0.8]
     nms_thresholds=[0.7, 0.7, 0.7]
     x1,y1,x2,y2,z=0,0,0,0,0
+    bounding_boxes=[]
+    landmarks=[]
     while (cap.isOpened()):
         ret, frame = cap.read()
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        result = face_mesh.process(rgb_frame)
+        mesh_frame = np.full(frame.shape, 255, dtype=np.uint8)
+        if result.multi_face_landmarks:
+
+            for face_landmarks in result.multi_face_landmarks:
+                for landmark in face_landmarks.landmark:
+                    height, width, _ = frame.shape
+                    center_y=height//2
+                    center_x=width//2
+                    print(height,width)
+                    x, y = int(landmark.x * width), int(landmark.y * height)
+                    print('x',x)
+                    print('y',y)
+                    xx=center_x + int((x - center_x) * factor)
+                    yy=center_y + int((y - center_y) * factor)
+                    print('xx,yy',xx,yy)
+                    cv2.circle(mesh_frame, (xx, yy), 2, (0, 0, 0), -1)
+
+        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))    
         bounding_boxes, facial_landmarks = detect_faces(pil_image, min_face_size, thresholds, nms_thresholds)
-        
         for bbox, landmarks in zip(bounding_boxes, facial_landmarks):
             x1, y1, x2, y2, z = bbox.astype(int)
 
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  
-
-        for i in range(5):
-            x_landmark, y_landmark = int(landmarks[i]), int(landmarks[i + 5])
-            cv2.circle(frame, (x_landmark, y_landmark), 2, (0, 0, 255), -1) 
-        if ret ==True:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            aligned_img=obj(pil_image, facial_landmarks)
-            image = frame_process(frame)
-            val = get_prediction(image)
-            if not ret:
-                continue
-
-            global VAL 
-            VAL=val
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  
             
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+
+            for i in range(5):
+                x_landmark, y_landmark = int(landmarks[i]), int(landmarks[i + 5])
+                cv2.circle(frame, (x_landmark, y_landmark), 2, (0, 0, 255), -1) 
+            if ret ==True:
+                ret, buffer = cv2.imencode('.jpg', frame)
+                aligned_img=obj(pil_image, facial_landmarks)
+                image = frame_process(frame)
+                val = get_prediction(image)
+                if not ret:
+                    continue
+
+                global VAL 
+                VAL=val
+                output_frame = np.hstack((frame, mesh_frame))
+
+                ret, buffer = cv2.imencode('.jpg', output_frame)
+                yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
  
 
 
