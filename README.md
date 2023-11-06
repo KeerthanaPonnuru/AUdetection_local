@@ -15,6 +15,7 @@ pip install flask-cors
 
 pip install opencv-python
 
+pip install mediapipe opencv-python
 ```
 
 ## Instructions
