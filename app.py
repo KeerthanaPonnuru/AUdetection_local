@@ -73,9 +73,9 @@ AU_DESCRIPTION = {
 def fun():
     face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.5)
     cap = cv2.VideoCapture(-0)
-    obj=FaceAlign(244,2.9)
+    obj=FaceAlign(224,2.9)
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  
-    videos = cv2.VideoWriter('ouput.mp4', fourcc, 2, (1280, 960))
+    videos = cv2.VideoWriter('ouput.mp4', fourcc, 5, (1280, 960))
     min_face_size = 20.0
     thresholds=[0.6, 0.7, 0.8]
     nms_thresholds=[0.7, 0.7, 0.7]
@@ -94,17 +94,14 @@ def fun():
                     height, width, _ = frame.shape
                     center_y=height//2
                     center_x=width//2
-                    print(height,width)
                     x, y = int(landmark.x * width), int(landmark.y * height)
-                    print('x',x)
-                    print('y',y)
                     xx=center_x + int((x - center_x) * factor)
                     yy=center_y + int((y - center_y) * factor)
-                    print('xx,yy',xx,yy)
                     cv2.circle(mesh_frame, (xx, yy), 2, (0, 0, 0), -1)
 
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))    
+        pil_image = Image.fromarray(frame)
         bounding_boxes, facial_landmarks = detect_faces(pil_image, min_face_size, thresholds, nms_thresholds)
+        aligned_img=obj(pil_image, facial_landmarks)
         for bbox, landmarks in zip(bounding_boxes, facial_landmarks):
             x1, y1, x2, y2, z = bbox.astype(int)
 
@@ -116,8 +113,7 @@ def fun():
                 cv2.circle(frame, (x_landmark, y_landmark), 2, (0, 0, 255), -1) 
             if ret ==True:
                 ret, buffer = cv2.imencode('.jpg', frame)
-                aligned_img=obj(pil_image, facial_landmarks)
-                image = frame_process(frame)
+                image = frame_process(aligned_img)
                 val = get_prediction(image)
                 if not ret:
                     continue
