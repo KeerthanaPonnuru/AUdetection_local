@@ -6,7 +6,6 @@ from PIL import Image
 from flask import Flask, Response, render_template,jsonify
 from detector import detect_faces
 from align import FaceAlign
-import threading
 from flask_cors import CORS
 import mediapipe as mp
 mp_face_mesh = mp.solutions.face_mesh
@@ -17,7 +16,6 @@ CORS(app)
 session = onnxruntime.InferenceSession("swin_transformer.onnx")
 inname = [input.name for input in session.get_inputs()]
 outname = [output.name for output in session.get_outputs()]
-DYNAMIC_TEXT=''
 VAL=[]
 
 def frame_process(frame, input_shape=(224, 224)):
